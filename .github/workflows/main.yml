@@ -1,0 +1,62 @@
+name: Build and publish new release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag (use CalVer: yyyy.mm.dd)'
+        required: true
+      push_latest_tag:
+        description: 'push latest tag'
+        default: 'true'
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: decaf/ltx-ble-dashboard
+
+jobs:
+  build:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: arm64,arm        
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - 
+        name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      -
+        name: Setup docker tags
+        run: |
+          TAGS=$REGISTRY/$IMAGE_NAME:${{ github.event.inputs.tag }}
+          if [ "${{ github.event.inputs.push_latest_tag }}" == "true" ]; then
+             TAGS=$TAGS,$REGISTRY/$IMAGE_NAME:latest
+          fi
+          echo ""
+          echo "TAGS"
+          echo $TAGS
+          echo TAGS=$TAGS >> $GITHUB_ENV
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.TAGS }}
