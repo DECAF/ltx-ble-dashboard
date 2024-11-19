@@ -1,0 +1,9 @@
+services:
+  app:
+    image: php:8.2-apache
+    hostname: ltx_ble_app
+    ports:
+      - 80:80
+    volumes:
+      - .:/var/www/html
+
