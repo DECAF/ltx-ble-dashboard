@@ -1,0 +1,12 @@
+<FilesMatch "^\.">
+Order allow,deny
+Deny from all
+</FilesMatch>
+<FilesMatch "Dockerfile">
+Order allow,deny
+Deny from all
+</FilesMatch>
+<FilesMatch "docker-compose.yml">
+Order allow,deny
+Deny from all
+</FilesMatch>
